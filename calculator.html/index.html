@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Scientific Calculator</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    padding:20px;
+}
+
+.container{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.calculator{
+    width:420px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(20px);
+    border-radius:25px;
+    padding:20px;
+    box-shadow:0 15px 35px rgba(0,0,0,.5);
+}
+
+.display{
+    width:100%;
+    height:80px;
+    border:none;
+    outline:none;
+    border-radius:15px;
+    background:#111827;
+    color:white;
+    text-align:right;
+    font-size:2rem;
+    padding:20px;
+    margin-bottom:15px;
+}
+
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+}
+
+button{
+    border:none;
+    height:60px;
+    border-radius:12px;
+    font-size:1rem;
+    cursor:pointer;
+    background:#374151;
+    color:white;
+    transition:.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+.operator{
+    background:#f59e0b;
+}
+
+.equal{
+    background:#10b981;
+}
+
+.history{
+    width:280px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(20px);
+    border-radius:25px;
+    padding:20px;
+    color:white;
+    max-height:600px;
+    overflow-y:auto;
+}
+
+.history h2{
+    margin-bottom:15px;
+}
+
+.history p{
+    margin-bottom:10px;
+    word-wrap:break-word;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="calculator">
+
+<input type="text" id="display" class="display" readonly>
+
+<div class="buttons">
+
+<button type="button" class="operator" onclick="clearDisplay()">AC</button>
+<button type="button" class="operator" onclick="deleteLast()">⌫</button>
+<button type="button" class="operator" onclick="appendValue('(')">(</button>
+<button type="button" class="operator" onclick="appendValue(')')">)</button>
+<button type="button" class="operator" onclick="appendValue('%')">%</button>
+
+<button type="button" onclick="appendValue('Math.sin(')">sin</button>
+<button type="button" onclick="appendValue('Math.cos(')">cos</button>
+<button type="button" onclick="appendValue('Math.tan(')">tan</button>
+<button type="button" onclick="appendValue('Math.sqrt(')">√</button>
+<button type="button" onclick="appendValue('**')">xʸ</button>
+
+<button type="button" onclick="appendValue('Math.log10(')">log</button>
+<button type="button" onclick="appendValue('Math.log(')">ln</button>
+<button type="button" onclick="appendValue('Math.PI')">π</button>
+<button type="button" onclick="appendValue('Math.E')">e</button>
+<button type="button" class="operator" onclick="appendValue('/')">÷</button>
+
+<button type="button" onclick="appendValue('7')">7</button>
+<button type="button" onclick="appendValue('8')">8</button>
+<button type="button" onclick="appendValue('9')">9</button>
+<button type="button" onclick="appendValue('*')">×</button>
+<button type="button" onclick="square()">x²</button>
+
+<button type="button" onclick="appendValue('4')">4</button>
+<button type="button" onclick="appendValue('5')">5</button>
+<button type="button" onclick="appendValue('6')">6</button>
+<button type="button" class="operator" onclick="appendValue('-')">−</button>
+<button type="button" onclick="factorial()">n!</button>
+
+<button type="button" onclick="appendValue('1')">1</button>
+<button type="button" onclick="appendValue('2')">2</button>
+<button type="button" onclick="appendValue('3')">3</button>
+<button type="button" class="operator" onclick="appendValue('+')">+</button>
+<button type="button" onclick="copyResult()">Copy</button>
+
+<button type="button" onclick="appendValue('0')">0</button>
+<button type="button" onclick="appendValue('.')">.</button>
+<button type="button" onclick="memoryRecall()">MR</button>
+<button type="button" onclick="memoryAdd()">M+</button>
+<button type="button" class="equal" onclick="calculate()">=</button>
+
+</div>
+
+</div>
+
+<div class="history">
+<h2>History</h2>
+<div id="history"></div>
+</div>
+
+</div>
+
+<script>
+
+const display = document.getElementById("display");
+const historyDiv = document.getElementById("history");
+
+let memory = 0;
+let calcHistory = [];
+
+function appendValue(value){
+    display.value += value;
+}
+
+function clearDisplay(){
+    display.value = "";
+}
+
+function deleteLast(){
+    display.value = display.value.slice(0,-1);
+}
+
+function evaluateExpression(expression){
+    const trimmed = expression.trim();
+    if (!trimmed) {
+        throw new Error("Empty expression");
+    }
+
+    const validPattern = /^[0-9+\-*/%.() a-zA-Z]+$/;
+    if (!validPattern.test(trimmed)) {
+        throw new Error("Invalid expression");
+    }
+
+    return Function("return " + trimmed)();
+}
+
+function calculate(){
+    try{
+        const expression = display.value;
+        const result = evaluateExpression(expression);
+        display.value = result;
+        calcHistory.unshift(`${expression} = ${result}`);
+        updateHistory();
+    }catch{
+        display.value = "Error";
+    }
+}
+
+function updateHistory(){
+    historyDiv.innerHTML =
+        calcHistory
+        .slice(0,20)
+        .map(item => `<p>${item}</p>`)
+        .join("");
+}
+
+function square(){
+    try{
+        const value = evaluateExpression(display.value);
+        display.value = value ** 2;
+    }catch{
+        display.value = "Error";
+    }
+}
+
+function factorial(){
+    try{
+        const n = evaluateExpression(display.value);
+        if (!Number.isInteger(n) || n < 0) {
+            throw new Error("Invalid factorial");
+        }
+        let result = 1;
+        for(let i=2; i<=n; i++){
+            result *= i;
+        }
+        display.value = result;
+    }catch{
+        display.value = "Error";
+    }
+}
+
+function memoryAdd(){
+    try{
+        memory = evaluateExpression(display.value);
+    }catch{}
+}
+
+function memoryRecall(){
+    display.value += memory;
+}
+
+function copyResult(){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(display.value);
+    }
+    alert("Copied!");
+}
+
+document.addEventListener("keydown",(e)=>{
+    const key = e.key;
+    if ("0123456789+-*/.%()".includes(key)){
+        display.value += key;
+        return;
+    }
+    if(key === "Enter"){
+        calculate();
+        return;
+    }
+    if(key === "Backspace"){
+        deleteLast();
+        return;
+    }
+    if(key === "Escape"){
+        clearDisplay();
+    }
+});
+
+</script>
+
+</body>
+</html>
